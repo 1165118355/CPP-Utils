@@ -1,7 +1,6 @@
 #ifndef COMMONUTILS_H
 #define COMMONUTILS_H
 
-#include<QString>
 #include <vector>
 
 namespace CommonUtils
@@ -22,7 +21,6 @@ namespace CommonUtils
     }
 
 
-    QString loadFontFamilyFromFiles(const QString &sfontFile);
 }
 
 #endif // COMMONUTILS_H

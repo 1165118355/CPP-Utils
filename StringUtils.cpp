@@ -121,3 +121,31 @@ std::string StringUtils::checkDir(const char *dir)
     }
     return stdDir;
 }
+
+std::string StringUtils::wstringToString(std::wstring wstr)
+{
+	size_t convertedChars = 0;
+	std::string curLocale = setlocale(LC_ALL, NULL); //curLocale="C"
+	setlocale(LC_ALL, "chs");
+	const wchar_t* wcs = wstr.c_str();
+	size_t stringLength = sizeof(wchar_t)*wstr.size() + 1;
+
+	char* dest = new char[stringLength];
+	wcstombs_s(&convertedChars, dest, stringLength, wcs, _TRUNCATE);
+	std::string result = dest;
+	delete[] dest;
+	setlocale(LC_ALL, curLocale.c_str());
+	return result;
+}
+
+std::wstring StringUtils::stringToWstring(std::string str)
+{
+	size_t convertedChars = 0;
+	size_t stringLength = sizeof(char)*str.size() + 1;
+
+	wchar_t* dest = new wchar_t[stringLength];
+	mbstowcs_s(&convertedChars, dest, stringLength, str.c_str(), _TRUNCATE);
+	std::wstring outputString = dest;
+	delete dest;
+	return outputString;
+}

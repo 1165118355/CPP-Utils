@@ -51,6 +51,24 @@ std::string UtilsString::dirname(const char *string)
     return outputDir;
 }
 
+std::string UtilsString::replace(const char* string, const char* subString, const char* replaceString)
+{
+    std::string stdString = string;
+    std::string stdSubString = subString;
+    int pos=0;
+    while (1)
+    {
+        pos = stdString.find(subString);
+        if (pos != std::string::npos)
+        {
+            stdString.replace(pos, stdSubString.size(), replaceString);
+            continue;
+        }
+        break;
+    }
+    return stdString;
+}
+
 std::vector<std::string> UtilsString::splite(const char * string, const char * splite)
 {
     std::vector<std::string> retrunList;

@@ -195,6 +195,7 @@ std::vector<Space::Math::Vec3> convertBizer(std::vector<Space::Math::Vec3> point
 		auto pc1 = p1 - dir * bLength / camber;
 
 		int simpleValue = aLength * simpleRate;
+		simpleValue = (simpleValue < 3 ? 3 : simpleValue);
 		if (i == 1)
 		{
 			for (int j = 0; j < simpleValue; ++j)
@@ -223,9 +224,35 @@ std::vector<Space::Math::Vec3> convertBizer(std::vector<Space::Math::Vec3> point
 	return newPoints;
 }
 
-Space::Math::Vec3 bezier2(Space::Math::Vec3 p0, Space::Math::Vec3 p1, Space::Math::Vec3 contorlP, float t)
+Space::Math::Vec3 calcVertical(Space::Math::Vec3 dir)
 {
-     return (p0 * pow(1 - t, 2)) + contorlP*((2.f*t) * (1-t))  + p1*pow(t, 2);
+	Space::Math::Vec3 up (0,0,1);
+	if (dir == up)
+		up.x += 0.001;
+	auto vertical = Space::Math::cross(dir, up);
+	return vertical;
+}
+
+bool isRectangleInside2D(Space::Math::vec2 p, Space::Math::vec2 p0, Space::Math::vec2 p1, Space::Math::vec2 p2, Space::Math::vec2 p3)
+{
+	if (Space::Math::dot((p1 - p0), (p - p0)) >= 0 &&
+		Space::Math::dot((p3 - p0), (p - p0)) >= 0 &&
+		Space::Math::dot((p3 - p2), (p - p2)) >= 0 &&
+		Space::Math::dot((p1 - p2), (p - p2)) >= 0)
+	{
+		return true;
+	}
+	return false;
+}
+
+bool isRectangleInside2D(Space::Math::Vec3 p, Space::Math::Vec3 p0, Space::Math::Vec3 p1, Space::Math::Vec3 p2, Space::Math::Vec3 p3)
+{
+	return isRectangleInside2D(Space::Math::vec2(p.x, p.y), Space::Math::vec2(p0.x, p0.y), Space::Math::vec2(p1.x, p1.y), Space::Math::vec2(p2.x, p2.y), Space::Math::vec2(p3.x, p3.y));
+}
+
+Space::Math::Vec3 bezier2(Space::Math::Vec3 p0, Space::Math::Vec3 p1, Space::Math::Vec3 contorlP, double t)
+{
+     return (p0 * pow(1 - t, 2.0)) + contorlP*((2.0*t) * (1.0-t)) + p1* pow(t, 2.0);
 }
 #endif
 }

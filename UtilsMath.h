@@ -31,7 +31,7 @@ namespace UtilsMath
 	Space::Math::quat directorToQuat(Space::Math::vec3 dir);
 
 	/// \brief  贝塞尔曲线
-	Space::Math::Vec3 bezier2(Space::Math::Vec3 p0, Space::Math::Vec3 p1, Space::Math::Vec3 contorlP, float t);
+	Space::Math::Vec3 bezier2(Space::Math::Vec3 p0, Space::Math::Vec3 p1, Space::Math::Vec3 contorlP, double t);
 
 	///	\brief	计算三角形面积
 	float calcTriangleArea(Space::Math::Vec3 p0, Space::Math::Vec3 p1, Space::Math::Vec3 p2);
@@ -44,7 +44,15 @@ namespace UtilsMath
 
 	/// \brief	将一组点集，曲线化
 	std::vector<Space::Math::Vec3> convertBizer(std::vector<Space::Math::Vec3> points, float simpleRate=10, float camber=2);
+
+	/// \brief	计算一个方向的垂直方向
+	Space::Math::Vec3 calcVertical(Space::Math::Vec3 dir);
+
+	///	\brief	判断点是否在矩形内
+	bool isRectangleInside2D(Space::Math::vec2 p, Space::Math::vec2 p0, Space::Math::vec2 p1, Space::Math::vec2 p2, Space::Math::vec2 p3);
+	bool isRectangleInside2D(Space::Math::Vec3 p, Space::Math::Vec3 p0, Space::Math::Vec3 p1, Space::Math::Vec3 p2, Space::Math::Vec3 p3);
 #endif 
+
 
 	/// \brief  把value的值限制在minValue和maxValue之间
 	template <class T>

@@ -167,7 +167,7 @@ std::vector<int> calcPolygon(std::vector<Space::Math::Vec3> &points)
 	return indexes;
 }
 
-std::vector<Space::Math::Vec3> convertBizer(std::vector<Space::Math::Vec3> points, float simpleRate, float camber)
+std::vector<Space::Math::Vec3> convertBizer(std::vector<Space::Math::Vec3> points, float simpleRate, float camber, float length)
 {
 	std::vector<Space::Math::Vec3> newPoints;
 	if (points.size() < 3)
@@ -175,7 +175,7 @@ std::vector<Space::Math::Vec3> convertBizer(std::vector<Space::Math::Vec3> point
 		return points;
 	}
 
-	for (int i = 1; i < points.size() - 1; i += 1)
+	for (int i = 1; i < (points.size() - 1); ++i)
 	{
 		auto p0 = points[i - 1];
 		auto p1 = points[i];
@@ -198,7 +198,7 @@ std::vector<Space::Math::Vec3> convertBizer(std::vector<Space::Math::Vec3> point
 		simpleValue = (simpleValue < 3 ? 3 : simpleValue);
 		if (i == 1)
 		{
-			for (int j = 0; j < simpleValue; ++j)
+			for (int j = 0; j <= simpleValue; ++j)
 			{
 				auto lerpPos = UtilsMath::bezier2(p0, p1, pc0, (float)j / simpleValue);
 				newPoints.push_back(lerpPos);
@@ -206,7 +206,7 @@ std::vector<Space::Math::Vec3> convertBizer(std::vector<Space::Math::Vec3> point
 		}
 		else
 		{
-			for (int j = 0; j < simpleValue; ++j)
+			for (int j = 0; j <= simpleValue; ++j)
 			{
 				float lerpValue = (float)j / simpleValue;
 				auto lerpPos = UtilsMath::bezier2(p0, p1, pc0, lerpValue);
@@ -215,39 +215,47 @@ std::vector<Space::Math::Vec3> convertBizer(std::vector<Space::Math::Vec3> point
 		}
 
 		simpleValue = bLength * simpleRate;
-		for (int j = 0; j < simpleValue; ++j)
+		simpleValue = (simpleValue < 3 ? 3 : simpleValue);
+		for (int j = 0; j <= simpleValue; ++j)
 		{
 			auto lerpPos = UtilsMath::bezier2(p1, p2, pc1, (float)j / simpleValue);
 			newPoints.push_back(lerpPos);
 		}
 	}
-	return newPoints;
-}
 
-Space::Math::Vec3 calcVertical(Space::Math::Vec3 dir)
-{
-	Space::Math::Vec3 up (0,0,1);
-	if (dir == up)
-		up.x += 0.001;
-	auto vertical = Space::Math::cross(dir, up);
-	return vertical;
-}
-
-bool isRectangleInside2D(Space::Math::vec2 p, Space::Math::vec2 p0, Space::Math::vec2 p1, Space::Math::vec2 p2, Space::Math::vec2 p3)
-{
-	if (Space::Math::dot((p1 - p0), (p - p0)) >= 0 &&
-		Space::Math::dot((p3 - p0), (p - p0)) >= 0 &&
-		Space::Math::dot((p3 - p2), (p - p2)) >= 0 &&
-		Space::Math::dot((p1 - p2), (p - p2)) >= 0)
+	//	均长
+	if (length > 0 && newPoints.size() > 2)
 	{
-		return true;
+		float currentLengt = length;
+		std::vector<Space::Math::Vec3>newLengthPoints;
+		newLengthPoints.push_back(newPoints[0]);
+		auto p0 = newPoints[0];
+		for (int i=1; i<newPoints.size(); ++i)
+		{
+			auto p1 = newPoints[i];
+			while (true)
+			{
+				auto distanceVec3 = p1 - p0;
+				auto allLength = distanceVec3.length();
+				if (allLength > currentLengt)
+				{
+					float lerpValue = currentLengt / distanceVec3.length();
+					p0 = Space::Math::lerp(p0, p1, lerpValue);
+					allLength -= currentLengt;
+					currentLengt = length;
+					newLengthPoints.push_back(p0);
+				}
+				else
+				{
+					currentLengt = currentLengt - allLength;
+					p0 = p1;
+					break;
+				}
+			}
+		}
+		return newLengthPoints;
 	}
-	return false;
-}
-
-bool isRectangleInside2D(Space::Math::Vec3 p, Space::Math::Vec3 p0, Space::Math::Vec3 p1, Space::Math::Vec3 p2, Space::Math::Vec3 p3)
-{
-	return isRectangleInside2D(Space::Math::vec2(p.x, p.y), Space::Math::vec2(p0.x, p0.y), Space::Math::vec2(p1.x, p1.y), Space::Math::vec2(p2.x, p2.y), Space::Math::vec2(p3.x, p3.y));
+	return newPoints;
 }
 
 Space::Math::Vec3 bezier2(Space::Math::Vec3 p0, Space::Math::Vec3 p1, Space::Math::Vec3 contorlP, double t)

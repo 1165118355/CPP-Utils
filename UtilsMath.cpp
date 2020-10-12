@@ -42,7 +42,7 @@ float calcTriangleArea(float a, float b, float c)
 
 
 #if defined(SPACE_DOUBLE)
-Space::Math::quat directorToQuat(Space::Math::vec3 dir)
+Space::Math::quat directorToQuat(Space::Math::vec3 dir, int axis)
 {                                     
 //	Space::Math::vec3 theFront = Space::Math::vec3(0, 1, 0);
 //	Space::Math::vec3 axiRot = Space::Math::cross(theFront, dir);						//	获取旋转轴
@@ -52,11 +52,37 @@ Space::Math::quat directorToQuat(Space::Math::vec3 dir)
 //	Space::Math::quat quat = Space::Math::quat(axiRot, angle);
 
 //	return quat;
+    Space::Math::vec3 up(0,0,1);
+    if(dir == Space::Math::vec3(0,0,1))
+        up = Space::Math::vec3(0.1,0,0.9);
 
     Space::Math::vec3 yAxis = dir;
-    Space::Math::vec3 xAxis = Space::Math::cross(yAxis, Space::Math::vec3(0, 0, 1));
+    Space::Math::vec3 xAxis = Space::Math::cross(yAxis, up);
     Space::Math::vec3 zAxis = Space::Math::cross(xAxis, yAxis);
-    Space::Math::quat quat(xAxis, yAxis, zAxis);
+    Space::Math::quat quat;
+    switch(axis)
+    {
+    case Space::Node::AXIS_X:
+        quat = Space::Math::quat (yAxis, xAxis, zAxis);
+        break;
+    case Space::Node::AXIS_NX:
+        quat = Space::Math::quat (-yAxis, xAxis, zAxis);
+        break;
+    case Space::Node::AXIS_Y:
+        quat = Space::Math::quat (xAxis, yAxis, zAxis);
+        break;
+    case Space::Node::AXIS_NY:
+        quat = Space::Math::quat (xAxis, -yAxis, zAxis);
+        break;
+    case Space::Node::AXIS_Z:
+        quat = Space::Math::quat (xAxis, zAxis, yAxis);
+        break;
+    case Space::Node::AXIS_NZ:
+        quat = Space::Math::quat (xAxis, zAxis, -yAxis);
+        break;
+    }
+
+
     return quat;
 }
 
@@ -258,9 +284,54 @@ std::vector<Space::Math::Vec3> convertBizer(std::vector<Space::Math::Vec3> point
 	return newPoints;
 }
 
+Space::Math::Vec3 calcVertical(Space::Math::Vec3 dir)
+{
+	Space::Math::Vec3 up (0,0,1);
+	if (dir == up)
+		up.x += 0.001;
+	auto vertical = Space::Math::cross(dir, up);
+	return vertical;
+}
+
+bool isRectangleInside2D(Space::Math::vec2 p, Space::Math::vec2 p0, Space::Math::vec2 p1, Space::Math::vec2 p2, Space::Math::vec2 p3)
+{
+	if (Space::Math::dot((p1 - p0), (p - p0)) >= 0 &&
+		Space::Math::dot((p3 - p0), (p - p0)) >= 0 &&
+		Space::Math::dot((p3 - p2), (p - p2)) >= 0 &&
+		Space::Math::dot((p1 - p2), (p - p2)) >= 0)
+	{
+		return true;
+	}
+	return false;
+}
+
+bool isRectangleInside2D(Space::Math::Vec3 p, Space::Math::Vec3 p0, Space::Math::Vec3 p1, Space::Math::Vec3 p2, Space::Math::Vec3 p3)
+{
+	return isRectangleInside2D(Space::Math::vec2(p.x, p.y), Space::Math::vec2(p0.x, p0.y), Space::Math::vec2(p1.x, p1.y), Space::Math::vec2(p2.x, p2.y), Space::Math::vec2(p3.x, p3.y));
+}
+
 Space::Math::Vec3 bezier2(Space::Math::Vec3 p0, Space::Math::Vec3 p1, Space::Math::Vec3 contorlP, double t)
 {
-     return (p0 * pow(1 - t, 2.0)) + contorlP*((2.0*t) * (1.0-t)) + p1* pow(t, 2.0);
+    return (p0 * pow(1 - t, 2.0)) + contorlP*((2.0*t) * (1.0-t)) + p1* pow(t, 2.0);
 }
+
+bool isPolygonInside2D(Space::Math::Vec3 p, std::vector<Space::Math::Vec3> points)
+{
+    auto indexes = calcPolygon(points);
+
+    for(int i=2; i<indexes.size(); ++i)
+    {
+        Space::Math::Vec3 p0 = points[indexes[i-2]];
+        Space::Math::Vec3 p1 = points[indexes[i-1]];
+        Space::Math::Vec3 p2 = points[indexes[i]];
+
+        if(Space::Geometry::pointTriangleInside(p, p0, p1, p2))
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
 #endif
 }

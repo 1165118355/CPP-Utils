@@ -191,8 +191,8 @@ std::vector<Space::Math::Vec3> convertBizer(std::vector<Space::Math::Vec3> point
 		{
 			dir = -dir;
 		}
-		auto pc0 = p1 + dir * aLength / camber;
-		auto pc1 = p1 - dir * bLength / camber;
+		auto pc0 = p1 + dir * (aLength / camber);
+		auto pc1 = p1 - dir * (bLength / camber);
 
 		int simpleValue = aLength * simpleRate;
 		simpleValue = (simpleValue < 3 ? 3 : simpleValue);
@@ -215,8 +215,8 @@ std::vector<Space::Math::Vec3> convertBizer(std::vector<Space::Math::Vec3> point
 		}
 
 		simpleValue = bLength * simpleRate;
-		simpleValue = (simpleValue < 3 ? 3 : simpleValue);
-		for (int j = 0; j <= simpleValue; ++j)
+		simpleValue = (simpleValue < 1 ? 2 : simpleValue);
+		for (int j = 1; j < (int)simpleValue+1; ++j)
 		{
 			auto lerpPos = UtilsMath::bezier2(p1, p2, pc1, (float)j / simpleValue);
 			newPoints.push_back(lerpPos);

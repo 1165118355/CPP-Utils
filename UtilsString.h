@@ -14,9 +14,6 @@ public:
     /// \brief  只留下路径的目录
     static std::string dirname(const char *string);
 
-    /// \brief  替换字符串
-    static std::string replace(const char *string, const char *subString, const char *replaceString);
-
     ///	\brief	分隔
     static std::vector<std::string> splite(const char *string, const char *splite);
 

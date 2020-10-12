@@ -369,3 +369,35 @@ Space::Math::Vec3 UtilsEngine::getScenePointByMouse(float distance)
     Space::Math::vec3 dir = player->getDirectionFromScreen(x, y);
     return Space::Math::Vec3(dir * distance);
 }
+
+bool UtilsEngine::getPlayerMouseDirection(Space::Math::Vec3& p0, Space::Math::Vec3& p1)
+{
+	Space::PlayerPtr player = Space::Editor::get()->getPlayer();
+	if (player.get() == NULL)
+		return false;
+
+	int width = Space::App::get()->getWidth();
+	int height = Space::App::get()->getHeight();
+
+	int mouse_x = Space::App::get()->getMouseX();
+	int mouse_y = Space::App::get()->getMouseY();
+	Space::Math::mat4 projection = player->getProjection();
+	Space::Math::Mat4 imodelview = player->getWorldTransform();
+
+	projection.m00 *= float(height) / width;
+	float x = -(float(mouse_x) / width * 2.0f - 1.0f + projection.m02) / projection.m00;
+	float y = (float(mouse_y) / height * 2.0f - 1.0f + projection.m12) / projection.m11;
+	if (projection.m32 == 0.0f)
+	{
+		p0 = imodelview * Space::Math::Vec3(-x, -y, -1.0f);
+		p1 = imodelview * Space::Math::Vec3(-x, -y, 1.0f);
+	}
+	else
+	{
+		p0 = Space::Math::Vec3(imodelview.m03, imodelview.m13, imodelview.m23);
+		p1 = imodelview * Space::Math::Vec3(x, y, 1.0f);
+	}
+	p1 = p0 - Space::Math::normalize(p1 - p0) * player->getZFar();
+	return true;
+}
+

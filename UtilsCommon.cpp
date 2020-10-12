@@ -1,5 +1,6 @@
 #include "UtilsCommon.h"
 #include "UtilsString.h"
+#pragma warning(disable:4996)
 
 #include <fstream>
 #if defined(_WIN32)

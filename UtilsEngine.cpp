@@ -372,8 +372,8 @@ Space::Math::Vec3 UtilsEngine::getScenePointByMouse(float distance)
 
 bool UtilsEngine::getPlayerMouseDirection(Space::Math::Vec3& p0, Space::Math::Vec3& p1)
 {
-	Space::PlayerPtr player = Space::Editor::get()->getPlayer();
-	if (player.get() == NULL)
+    Space::PlayerPtr player = getPlayer();
+    if (player.get() == NULL)
 		return false;
 
 	int width = Space::App::get()->getWidth();
@@ -401,3 +401,11 @@ bool UtilsEngine::getPlayerMouseDirection(Space::Math::Vec3& p0, Space::Math::Ve
 	return true;
 }
 
+
+Space::Math::ivec2 UtilsEngine::projectionToScreenCoordinate(Space::Math::Vec3 position)
+{
+    int x,y;
+    auto player = getPlayer();
+    player->getScreenPosition(x,y,position);
+    return Space::Math::ivec2(x,y);
+}

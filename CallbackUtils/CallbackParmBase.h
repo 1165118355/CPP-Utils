@@ -1,4 +1,4 @@
-////////////////////////////
+﻿////////////////////////////
 //
 //  Wirter: David.zhu
 //  Date:   2020-04-28
@@ -80,7 +80,7 @@ namespace CallbackUtils
     public:
         /// \brief  初始化第一参数
         CallbackParm3<PARM1, PARM2, PARM3>(PARM1 parm1, PARM2 parm2, PARM3 parm3):
-            CallbackParm2(parm2)
+            CallbackParm2(parm1, parm2)
         {
             m_Parm3= parm3;
             m_ParmNumber = 3;

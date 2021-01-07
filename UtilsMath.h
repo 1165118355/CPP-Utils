@@ -1,18 +1,12 @@
-////////////////////////////
-//
-//  Wirter: David.zhu
-//  Date:   2020-04-27
-//  brief:  xxx
-//
 #ifndef MATHUTILS_H
 #define MATHUTILS_H
 
-#include <vector>
 //	SpaceEngine的API
 #if defined(SPACE_DOUBLE)
 #include <SpaceMathLib.h>
 #include <SpaceNode.h>
 #endif
+#include <vector>
 
 namespace UtilsMath
 {
@@ -49,6 +43,10 @@ namespace UtilsMath
 	/// \brief	计算一个方向的垂直方向
 	Space::Math::Vec3 calcVertical(Space::Math::Vec3 dir);
 
+	///	\brief	获取两条线的交点
+	Space::Math::Vec2 getIntersectionByTwoLine(Space::Math::Vec2 p0a, Space::Math::Vec2 p1a, Space::Math::Vec2 p0b, Space::Math::Vec2 p1b);
+	Space::Math::Vec3 getIntersectionByTwoLine(Space::Math::Vec3 p0a, Space::Math::Vec3 p1a, Space::Math::Vec3 p0b, Space::Math::Vec3 p1b);
+
 	///	\brief	判断点是否在矩形内
 	bool isRectangleInside2D(Space::Math::vec2 p, Space::Math::vec2 p0, Space::Math::vec2 p1, Space::Math::vec2 p2, Space::Math::vec2 p3);
 	bool isRectangleInside2D(Space::Math::Vec3 p, Space::Math::Vec3 p0, Space::Math::Vec3 p1, Space::Math::Vec3 p2, Space::Math::Vec3 p3);
@@ -72,6 +70,12 @@ namespace UtilsMath
 		}
 		return value;
 	}
+
+    ///	\brief	插值算法
+    float lerpSine(float a, float b, float x);
+
+	Space::Math::Vec3 GeographyToCartesian(const Space::Math::Vec3 position);
+	Space::Math::Vec3 CartesianToGeography(const Space::Math::Vec3 point);
 }
 
 #endif // MATHUTILS_H

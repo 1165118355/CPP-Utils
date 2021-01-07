@@ -48,6 +48,9 @@ namespace UtilsEngine
     /// \brief  获取鼠标指向的三维射线坐标(用于射线检测)
     Space::Math::Vec3 getScenePointByMouse(float distance=-1);
 
+    /// \brief  获取该点的投影坐标哦
+    Space::Math::ivec2 projectionToScreenCoordinate(Space::Math::Vec3 position);
+
 
 	bool getPlayerMouseDirection(Space::Math::Vec3& p0, Space::Math::Vec3& p1);
 

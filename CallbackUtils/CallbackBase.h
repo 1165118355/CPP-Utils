@@ -1,4 +1,4 @@
-////////////////////////////
+﻿////////////////////////////
 //
 //  Wirter: David.zhu
 //  Date:   2020-04-28
@@ -204,5 +204,13 @@ namespace CallbackUtils
         return callback;
     }
 
+
+    template <class Cls, class A0, class A1, class A2>
+    CallbackBasePtr makeCallback(Cls *obj, void(Cls::*func)(A0 par1,A1 par2, A2 par3))
+    {
+        auto function = std::bind(func, obj, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+        std::shared_ptr<Callback3<A0,A1,A2>> callback (new Callback3<A0,A1,A2>(function));
+        return callback;
+    }
 }
 #endif // __CALLBACKBASE_H

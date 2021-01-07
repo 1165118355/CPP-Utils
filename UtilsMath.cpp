@@ -1,4 +1,5 @@
 #include "UtilsMath.h"
+#include "MercatorProj.h"
 #if defined(SPACE_DOUBLE)
 #include <SpaceMathLib.h>
 #include <SpaceGeometry.h>
@@ -97,7 +98,7 @@ float calcTriangleArea(Space::Math::Vec3 p0, Space::Math::Vec3 p1, Space::Math::
 	return s;
 }
 
-bool sortPoints(std::vector<Space::Math::Vec3> &points)
+bool UtilsMath::sortPoints(std::vector<Space::Math::Vec3> &points)
 {
 	bool isSort = false;
 	//顺时针排序(先找到一个凸点p，然后得到(p-1,p) , (p, p+1)两个向量进行叉乘得到多边形绕序)
@@ -232,7 +233,7 @@ std::vector<Space::Math::Vec3> convertBizer(std::vector<Space::Math::Vec3> point
 		}
 		else
 		{
-			for (int j = 0; j <= simpleValue; ++j)
+            for (int j = 0; j < simpleValue; ++j)
 			{
 				float lerpValue = (float)j / simpleValue;
 				auto lerpPos = UtilsMath::bezier2(p0, p1, pc0, lerpValue);
@@ -293,6 +294,40 @@ Space::Math::Vec3 calcVertical(Space::Math::Vec3 dir)
 	return vertical;
 }
 
+Space::Math::Vec2 getIntersectionByTwoLine(Space::Math::Vec2 p0a, Space::Math::Vec2 p1a, Space::Math::Vec2 p0b, Space::Math::Vec2 p1b)
+{
+	//	先判断两条线是否有交点的可能
+	if (Space::Math::min(p0a[0], p1a[0]) > Space::Math::max(p0b[0], p1b[0]))
+		return Space::Math::Vec2();
+	if (Space::Math::min(p0a[1], p1a[1]) > Space::Math::max(p0b[1], p1b[1]))
+		return Space::Math::Vec2();
+	if (Space::Math::min(p0b[0], p1b[0]) > Space::Math::max(p0a[0], p1a[0]))
+		return Space::Math::Vec2();
+	if (Space::Math::min(p0b[1], p1b[1]) > Space::Math::max(p0a[1], p1a[1]))
+		return Space::Math::Vec2();
+
+
+	//Space::Math::vec2 base = Space::Math::vec2(p1b - p0b);
+	//double d1 = abs (Space::Math::cross(base, Space::Math::vec2(p0a - p0b)));
+	//double  d2 = abs(Space::Math::cross(base, Space::Math::vec2(p1a - p0b)));
+	//double t = d1 / (d1 + d2);
+	//Space::Math::Vec2 temp = (p1a - p0a)*t;
+	//return p0a + temp;
+
+	double x1 = p0a.x, y1 = p0a.y;
+	double x2 = p1a.x, y2 = p1a.y;
+	double x3 = p0b.x, y3 = p0b.y;
+	double x4 = p1b.x, y4 = p1b.y;
+	double t = ((x2 - x1)*(y3 - y1) - (x3 - x1)*(y2 - y1)) / ((x2 - x1)*(y3 - y4) - (x3 - x4)*(y2 - y1));
+	return Space::Math::Vec2(x3 + t*(x4 - x3), y3 + t*(y4 - y3));
+}
+
+Space::Math::Vec3 getIntersectionByTwoLine(Space::Math::Vec3 p0a, Space::Math::Vec3 p1a, Space::Math::Vec3 p0b, Space::Math::Vec3 p1b)
+{
+	auto result = getIntersectionByTwoLine(Space::Math::Vec2(p0a.x, p0a.y), Space::Math::Vec2(p1a.x, p1a.y), Space::Math::Vec2(p0b.x, p0b.y), Space::Math::Vec2(p1b.x, p1b.y));
+    return Space::Math::Vec3(result.x, result.y, p1b.z);
+}
+
 bool isRectangleInside2D(Space::Math::vec2 p, Space::Math::vec2 p0, Space::Math::vec2 p1, Space::Math::vec2 p2, Space::Math::vec2 p3)
 {
 	if (Space::Math::dot((p1 - p0), (p - p0)) >= 0 &&
@@ -312,6 +347,14 @@ bool isRectangleInside2D(Space::Math::Vec3 p, Space::Math::Vec3 p0, Space::Math:
 
 Space::Math::Vec3 bezier2(Space::Math::Vec3 p0, Space::Math::Vec3 p1, Space::Math::Vec3 contorlP, double t)
 {
+//    auto p0xy = p0;
+//    auto p1xy = p1;
+//    auto contorlPxy = p1;
+//    p0xy.z=0;
+//    p1xy.z=0;
+//    contorlPxy.z=0;
+//    auto xy = (p0xy * pow(1 - t, 2.0)) + contorlPxy*((2.0*t) * (1.0-t)) + p1xy* pow(t, 2.0);
+//    xy.z = Space::Math::lerp(p0.z, p1.z, t);
     return (p0 * pow(1 - t, 2.0)) + contorlP*((2.0*t) * (1.0-t)) + p1* pow(t, 2.0);
 }
 
@@ -331,6 +374,19 @@ bool isPolygonInside2D(Space::Math::Vec3 p, std::vector<Space::Math::Vec3> point
         }
     }
     return false;
+}
+
+
+Space::Math::Vec3 GeographyToCartesian(const Space::Math::Vec3 position)
+{
+	std::pair<double, double> tempPair = MercatorProj::WGS84ToMercator(position[1],position[0]);
+	return Space::Math::Vec3(tempPair.first,tempPair.second,position[2]);
+}
+
+Space::Math::Vec3 CartesianToGeography(const Space::Math::Vec3 point)
+{
+	std::pair<double, double> tempPair = MercatorProj::mercatorToWGS84(point[0], point[1]);
+	return Space::Math::Vec3(tempPair.first, tempPair.second, point[2]);
 }
 
 #endif

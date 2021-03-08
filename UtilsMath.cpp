@@ -10,21 +10,8 @@ namespace UtilsMath
 
 double UtilsMath::rad(double d)
 {
-    return d * SPACE_PI / 180.00; //角度转换成弧度
+    return d * 3.1415926 / 180.00; //角度转换成弧度
 }
-
-double UtilsMath::longitudeAndLatitudeDistance(double longitude1, double latitude1, double longitude2, double latitude2)
-{
-    double Lat1 = rad(latitude1);                       // 纬度
-    double Lat2 = rad(latitude2);
-    double a = Lat1 - Lat2;                             //两点纬度之差
-    double b = rad(longitude1) - rad(longitude2);       //经度之差
-    double s = 2 * Space::Math::asin(sqrt(pow(Space::Math::sin(a / 2), 2) + Space::Math::cos(Lat1) * Space::Math::cos(Lat2) * pow(Space::Math::sin(b / 2), 2)));//计算两点距离的公式
-    s = s * 6378137.0;                                  //弧长乘地球半径（半径为米）
-    s = Space::Math::round(s * 10000) / 10000;        //精确距离的数值
-    return s;
-}
-
 float rand(int x)
 {
     int seed = 2;
@@ -376,18 +363,132 @@ bool isPolygonInside2D(Space::Math::Vec3 p, std::vector<Space::Math::Vec3> point
     return false;
 }
 
-
-Space::Math::Vec3 GeographyToCartesian(const Space::Math::Vec3 position)
-{
-	std::pair<double, double> tempPair = MercatorProj::WGS84ToMercator(position[1],position[0]);
-	return Space::Math::Vec3(tempPair.first,tempPair.second,position[2]);
-}
-
-Space::Math::Vec3 CartesianToGeography(const Space::Math::Vec3 point)
-{
-	std::pair<double, double> tempPair = MercatorProj::mercatorToWGS84(point[0], point[1]);
-	return Space::Math::Vec3(tempPair.first, tempPair.second, point[2]);
-}
-
 #endif
+
+bool pointTriangleInside(WaterBox::Math::vec3 P, WaterBox::Math::vec3 A, WaterBox::Math::vec3 B, WaterBox::Math::vec3 C)
+{
+	WaterBox::Math::vec3 v0 = C - A;
+	WaterBox::Math::vec3 v1 = B - A;
+	WaterBox::Math::vec3 v2 = P - A;
+
+	float dot00 = WaterBox::Math::dot(v0, v0);
+	float dot01 = WaterBox::Math::dot(v0, v1);
+	float dot02 = WaterBox::Math::dot(v0, v2);
+	float dot11 = WaterBox::Math::dot(v1, v1);
+	float dot12 = WaterBox::Math::dot(v1, v2);
+
+	float inverDeno = 1 / (dot00 * dot11 - dot01 * dot01);
+
+	float u = (dot11 * dot02 - dot01 * dot12) * inverDeno;
+	if (u < 0 || u > 1) // if u out of range, return directly
+	{
+		return false;
+	}
+
+	float v = (dot00 * dot12 - dot01 * dot02) * inverDeno;
+	if (v < 0 || v > 1) // if v out of range, return directly
+	{
+		return false;
+	}
+
+	return u + v <= 1;
+}
+
+//	\brief	将点进行顺时针排序
+bool sortPoints(std::vector<WaterBox::Math::vec3> &points)
+{
+	bool isSort = false;
+	//顺时针排序(先找到一个凸点p，然后得到(p-1,p) , (p, p+1)两个向量进行叉乘得到多边形绕序)
+	if (points.size() >= 3)
+	{
+		int p = 0;
+		for (int i = 0; i < points.size(); ++i)
+		{
+			WaterBox::Math::vec3 posMax = points[p];
+			WaterBox::Math::vec3 pos = points[i];
+			if (pos.x != 0 && pos.y != 0 && pos.x > posMax.x)
+			{
+				p = i;
+			}
+		}
+
+		int ps1 = p == 0 ? (points.size() - 1) : (p - 1);
+		int pp1 = p == (points.size() - 1) ? 0 : (p + 1);
+
+		WaterBox::Math::vec3 pPos = points[p];
+		WaterBox::Math::vec3 ps1Pos = points[ps1];
+		WaterBox::Math::vec3 pp1Pos = points[pp1];
+
+		ps1Pos = ps1Pos - pPos;
+		pp1Pos = pPos - pp1Pos;
+
+		WaterBox::Math::vec3 crossResult = WaterBox::Math::cross(ps1Pos, pp1Pos);
+		if (crossResult.z > 0)
+		{
+			std::vector<WaterBox::Math::vec3> copy = points;
+			for (int i = 0; i < copy.size(); ++i)
+			{
+				points[i] = copy[copy.size() - i - 1];
+			}
+			isSort = true;
+		}
+	}
+	return isSort;
+}
+
+//	\brief	根据多边形顶点计算多边形三角面索引
+std::vector<int> calcPolygon(std::vector<WaterBox::Math::vec3> &points)
+{
+	//顺时针排序(先找到一个凸点p，然后得到(p-1,p) , (p, p+1)两个向量进行叉乘得到多边形绕序)
+	sortPoints(points);
+
+	//	构建三角面
+	std::vector<int> indexes;
+	std::vector<std::pair<int, WaterBox::Math::vec3>> vetricesMap;
+	for (int i = 0; i < points.size(); ++i)
+	{
+		vetricesMap.push_back(std::pair<int, WaterBox::Math::vec3>(i, points[i]));
+	}
+	bool isActivity = true;
+	while (isActivity)
+	{
+		isActivity = false;
+		for (int i = 0; i < (vetricesMap.size() - 2); ++i)
+		{
+			WaterBox::Math::vec3 p0 = vetricesMap[i + 0].second;
+			WaterBox::Math::vec3 p1 = vetricesMap[i + 1].second;
+			WaterBox::Math::vec3 p2 = vetricesMap[i + 2].second;
+
+			WaterBox::Math::vec3 A = p1 - p0;
+			WaterBox::Math::vec3 B = p2 - p1;
+			WaterBox::Math::vec3 result = WaterBox::Math::cross(A, B);
+
+			//	如果三角面中有其他的点，则不处理
+			int isHaveTriangular = false;
+			for (int j = 0; j < points.size(); ++j)
+			{
+				if (j == vetricesMap[i + 0].first ||
+					j == vetricesMap[i + 1].first ||
+					j == vetricesMap[i + 2].first)
+				{
+					continue;
+				}
+				isHaveTriangular = pointTriangleInside(points[j], p0, p1, p2);
+				if (isHaveTriangular)
+				{
+					break;
+				}
+			}
+			if (result.z <= 0 && !isHaveTriangular)
+			{
+				indexes.push_back(vetricesMap[i + 2].first);
+				indexes.push_back(vetricesMap[i + 1].first);
+				indexes.push_back(vetricesMap[i + 0].first);
+				vetricesMap.erase(vetricesMap.begin() + (i + 1));
+				isActivity = true;
+			}
+		}
+	}
+	return indexes;
+}
 }

@@ -6,15 +6,13 @@
 #include <SpaceMathLib.h>
 #include <SpaceNode.h>
 #endif
+#include "WaterBox/SDL2_Math.h"
 #include <vector>
 
 namespace UtilsMath
 {
     /// \brief  角度转换成弧度
     double rad(double d);
-
-    /// \brief 两点纬度之差
-    double longitudeAndLatitudeDistance(double longitude1, double latitude1, double longitude2, double latitude2);
 
     ///	\brief	随机函数，输入一个正整数，返回一个-1~1的伪随机数
     float rand(int x);
@@ -56,6 +54,15 @@ namespace UtilsMath
 #endif 
 
 
+	bool pointTriangleInside(WaterBox::Math::vec3 P, WaterBox::Math::vec3 A, WaterBox::Math::vec3 B, WaterBox::Math::vec3 C);
+
+	//	\brief	将点进行顺时针排序
+	bool sortPoints(std::vector<WaterBox::Math::vec3> &points);
+
+	//	\brief	根据多边形顶点计算多边形三角面索引
+	std::vector<int> calcPolygon(std::vector<WaterBox::Math::vec3> &points);
+
+
 	/// \brief  把value的值限制在minValue和maxValue之间
 	template <class T>
 	T clamp(T value, T minValue, T maxValue)
@@ -73,9 +80,6 @@ namespace UtilsMath
 
     ///	\brief	插值算法
     float lerpSine(float a, float b, float x);
-
-	Space::Math::Vec3 GeographyToCartesian(const Space::Math::Vec3 position);
-	Space::Math::Vec3 CartesianToGeography(const Space::Math::Vec3 point);
 }
 
 #endif // MATHUTILS_H
